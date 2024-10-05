@@ -8,9 +8,9 @@
 ARG CUDA_VERSION=12.4.1
 #################### BASE BUILD IMAGE ####################
 # prepare basic build environment
-FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu20.04 AS base
+FROM nvcr.io/nvidia/pytorch:24.07-py3 AS base
 ARG CUDA_VERSION=12.4.1
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.10
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Python and other dependencies
@@ -34,13 +34,24 @@ RUN echo 'tzdata tzdata/Areas select America' | debconf-set-selections \
 RUN ldconfig /usr/local/cuda-$(echo $CUDA_VERSION | cut -d. -f1,2)/compat/
 
 WORKDIR /workspace
+# max jobs used by Ninja to build extensions
+ARG max_jobs=8
+ENV MAX_JOBS=${max_jobs}
+
 
 # install build and runtime dependencies
-COPY requirements-common.txt requirements-common.txt
+COPY requirements-common.txt requirements-common.txt 
 COPY requirements-cuda.txt requirements-cuda.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install -r requirements-cuda.txt
 
+# RUN mkdir vllm-aarch64-whl
+
+# RUN --mount=type=cache,target=/root/.cache/pip \
+#    pip --verbose wheel --use-pep517 --no-deps -w /workspace/vllm-aarch64-whl --no-build-isolation xformers==0.0.27
+
+# RUN --mount=type=cache,target=/root/.cache/pip \
+#     python3 -m pip install /workspace/vllm-aarch64-whl/*.whl --no-cache-dir --no-deps
 
 # cuda arch list used by torch
 # can be useful for both `dev` and `test`
@@ -73,7 +84,7 @@ COPY pyproject.toml pyproject.toml
 COPY vllm vllm
 
 # max jobs used by Ninja to build extensions
-ARG max_jobs=2
+ARG max_jobs=8
 ENV MAX_JOBS=${max_jobs}
 # number of threads used by nvcc
 ARG nvcc_threads=8
@@ -83,9 +94,12 @@ ARG USE_SCCACHE
 ARG SCCACHE_BUCKET_NAME=vllm-build-sccache
 ARG SCCACHE_REGION_NAME=us-west-2
 ARG SCCACHE_S3_NO_CREDENTIALS=0
+
+COPY .git .git
+
 # if USE_SCCACHE is set, use sccache to speed up compilation
 RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=.git,target=.git \
+   # --mount=type=bind,source=.git,target=.git \
     if [ "$USE_SCCACHE" = "1" ]; then \
         echo "Installing sccache..." \
         && curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.8.1/sccache-v0.8.1-x86_64-unknown-linux-musl.tar.gz \
@@ -105,7 +119,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 ENV CCACHE_DIR=/root/.cache/ccache
 RUN --mount=type=cache,target=/root/.cache/ccache \
     --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=.git,target=.git  \
+    #--mount=type=bind,source=.git,target=.git  \
     if [ "$USE_SCCACHE" != "1" ]; then \
         python3 setup.py bdist_wheel --dist-dir=dist --py-limited-api=cp38; \
     fi
@@ -135,10 +149,13 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 #################### DEV IMAGE ####################
 #################### vLLM installation IMAGE ####################
 # image with vLLM installed
-FROM nvidia/cuda:${CUDA_VERSION}-base-ubuntu20.04 AS vllm-base
+FROM nvcr.io/nvidia/pytorch:24.07-py3 AS vllm-base
 ARG CUDA_VERSION=12.4.1
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.10
 WORKDIR /vllm-workspace
+# max jobs used by Ninja to build extensions
+ARG max_jobs=8
+ENV MAX_JOBS=${max_jobs}
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN PYTHON_VERSION_STR=$(echo ${PYTHON_VERSION} | sed 's/\.//g') && \
@@ -165,14 +182,22 @@ RUN echo 'tzdata tzdata/Areas select America' | debconf-set-selections \
 # or future versions of triton.
 RUN ldconfig /usr/local/cuda-$(echo $CUDA_VERSION | cut -d. -f1,2)/compat/
 
+#RUN --mount=type=cache,target=/root/.cache/pip \
+#    pip install xformers==0.0.27.post2
+
 # install vllm wheel first, so that torch etc will be installed
 RUN --mount=type=bind,from=build,src=/workspace/dist,target=/vllm-workspace/dist \
     --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install dist/*.whl --verbose
 
+# RUN --mount=type=bind,from=base,src=/workspace/vllm-aarch64-whl,target=/workspace/vllm-aarch64-whl \
+#     --mount=type=cache,target=/root/.cache/pip \
+#     python3 -m pip install /workspace/vllm-aarch64-whl/*.whl --no-deps --no-cache-dir
+
 RUN --mount=type=cache,target=/root/.cache/pip \
     . /etc/environment && \
-    python3 -m pip install https://github.com/flashinfer-ai/flashinfer/releases/download/v0.1.6/flashinfer-0.1.6+cu121torch2.4-cp${PYTHON_VERSION_STR}-cp${PYTHON_VERSION_STR}-linux_x86_64.whl
+    #python3 -m pip install https://github.com/flashinfer-ai/flashinfer/releases/download/v0.1.6/flashinfer-0.1.6+cu121torch2.4-cp${PYTHON_VERSION_STR}-cp${PYTHON_VERSION_STR}-linux_x86_64.whl
+    python3 -m pip install https://filedn.eu/lougUsdPvd1uJK2jfOYWogH/pypi/flashinfer-0.1.6-cp310-cp310-linux_aarch64.whl
 #################### vLLM installation IMAGE ####################
 
 
