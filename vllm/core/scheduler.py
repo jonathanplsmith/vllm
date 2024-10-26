@@ -1457,6 +1457,7 @@ class Scheduler:
         self,
         seq_group: SequenceGroup,
     ) -> None:
+        seq_group.add_preempty_out_time(time.time())
         seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
         assert len(seqs) == 1
         for seq in seqs:
@@ -1469,6 +1470,7 @@ class Scheduler:
         seq_group: SequenceGroup,
         blocks_to_swap_out: List[Tuple[int, int]],
     ) -> None:
+        seq_group.add_preempty_out_time(time.time())
         self._swap_out(seq_group, blocks_to_swap_out)
 
     def _swap_in(
@@ -1476,6 +1478,7 @@ class Scheduler:
         seq_group: SequenceGroup,
         blocks_to_swap_in: List[Tuple[int, int]],
     ) -> None:
+        seq_group.add_preempty_in_time(time.time())
         mapping = self.block_manager.swap_in(seq_group)
         blocks_to_swap_in.extend(mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):

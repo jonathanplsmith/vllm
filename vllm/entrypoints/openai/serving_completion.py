@@ -384,7 +384,9 @@ class OpenAIServingCompletion(OpenAIServing):
         num_prompt_tokens = 0
         num_generated_tokens = 0
 
+        metrics = []
         for final_res in final_res_batch:
+            metrics.append(final_res.metrics)
             prompt_token_ids = final_res.prompt_token_ids
             assert prompt_token_ids is not None
             prompt_logprobs = final_res.prompt_logprobs
@@ -460,6 +462,7 @@ class OpenAIServingCompletion(OpenAIServing):
             model=model_name,
             choices=choices,
             usage=usage,
+            metrics=metrics
         )
 
     def _create_completion_logprobs(
