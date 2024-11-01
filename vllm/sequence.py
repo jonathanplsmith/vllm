@@ -119,8 +119,8 @@ class RequestMetrics:
     scheduler_time: Optional[float] = None
     model_forward_time: Optional[float] = None
     model_execute_time: Optional[float] = None
-    preempty_out_times: Optional[List[float]] = None
-    preempty_in_times:  Optional[List[float]] = None
+    preempty_out_times: Optional[List[Tuple[float, int]]] = None
+    preempty_in_times:  Optional[List[Tuple[float, int]]] = None
 
 
 class SequenceDataDelta(
@@ -785,10 +785,10 @@ class SequenceGroup:
         """Sets the finished time for Request level timings."""
         self.metrics.finished_time = time
 
-    def add_preempty_out_time(self, time: float) -> None:
+    def add_preempty_out_time(self, time: float, blocks: int) -> None:
         self.metrics.preempty_out_times.append(time)
     
-    def add_preempty_in_time(self, time: float) -> None:
+    def add_preempty_in_time(self, time: float, blocks: int) -> None:
         self.metrics.preempty_in_times.append(time)
 
     def get_max_num_running_seqs(self) -> int:
