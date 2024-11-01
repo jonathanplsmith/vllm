@@ -121,7 +121,7 @@ class RequestMetrics:
     model_execute_time: Optional[float] = None
     preempty_out_times: Optional[List[Tuple[float, int]]] = None
     preempty_in_times:  Optional[List[Tuple[float, int]]] = None
-    token_times: Optional[List[float]]
+    token_times: Optional[List[float]] = None
 
 class SequenceDataDelta(
         msgspec.Struct,
