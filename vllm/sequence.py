@@ -121,7 +121,7 @@ class RequestMetrics:
     model_execute_time: Optional[float] = None
     preempty_out_times: Optional[List[Tuple[float, int]]] = None
     preempty_in_times:  Optional[List[Tuple[float, int]]] = None
-
+    token_times: Optional[List[float]]
 
 class SequenceDataDelta(
         msgspec.Struct,
@@ -686,7 +686,8 @@ class SequenceGroup:
                                       first_token_time=None,
                                       time_in_queue=None,
                                       preempty_in_times=[],
-                                      preempty_out_times=[])
+                                      preempty_out_times=[],
+                                      token_times=[])
         self.lora_request = lora_request
         self.prompt_logprobs: Optional[PromptLogprobs] = None
         self.state = SequenceGroupState()
@@ -790,6 +791,9 @@ class SequenceGroup:
     
     def add_preempty_in_time(self, time: float, blocks: int) -> None:
         self.metrics.preempty_in_times.append(time)
+
+    def add_token_time(self, time: float) -> None:
+        self.metrics.token_times.append(time)
 
     def get_max_num_running_seqs(self) -> int:
         """The maximum number of sequences running in parallel in the remaining

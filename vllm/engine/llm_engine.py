@@ -1023,6 +1023,7 @@ class LLMEngine:
 
             seq_group = scheduled_seq_group.seq_group
             seq_group.maybe_set_first_token_time(now)
+            seq_group.add_token_time(now)
             request_output = RequestOutputFactory.create(
                 seq_group, use_cache=self.use_cached_outputs)
             if request_output:
@@ -1063,6 +1064,7 @@ class LLMEngine:
 
             seq_group = scheduled_seq_group.seq_group
             seq_group.maybe_set_first_token_time(now)
+            seq_group.add_token_time(now)
             request_output = RequestOutputFactory.create(
                 seq_group, use_cache=self.use_cached_outputs)
             if request_output:
