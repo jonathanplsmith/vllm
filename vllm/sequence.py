@@ -121,6 +121,7 @@ class RequestMetrics:
     model_execute_time: Optional[float] = None
     preempty_out_times: Optional[List[float]] = None
     preempty_in_times:  Optional[List[float]] = None
+    foo: int = 3
 
 
 class SequenceDataDelta(

@@ -14,6 +14,8 @@ from vllm.sampling_params import SamplingParams
 
 from .version import __version__, __version_tuple__
 
+print("USING CUSTOM VLLM")
+
 __all__ = [
     "__version__",
     "__version_tuple__",
