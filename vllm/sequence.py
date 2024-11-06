@@ -787,10 +787,10 @@ class SequenceGroup:
         self.metrics.finished_time = time
 
     def add_preempty_out_time(self, time: float, blocks: int) -> None:
-        self.metrics.preempty_out_times.append(time)
+        self.metrics.preempty_out_times.append((time, blocks))
     
     def add_preempty_in_time(self, time: float, blocks: int) -> None:
-        self.metrics.preempty_in_times.append(time)
+        self.metrics.preempty_in_times.append((time, blocks))
 
     def add_token_time(self, time: float) -> None:
         self.metrics.token_times.append(time)
