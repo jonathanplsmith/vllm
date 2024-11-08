@@ -122,6 +122,7 @@ class RequestMetrics:
     preempty_out_times: Optional[List[Tuple[float, int]]] = None
     preempty_in_times:  Optional[List[Tuple[float, int]]] = None
     token_times: Optional[List[float]] = None
+    prefill_scheduled_times: Optional[List[float]] = None
 
 class SequenceDataDelta(
         msgspec.Struct,
@@ -794,6 +795,9 @@ class SequenceGroup:
 
     def add_token_time(self, time: float) -> None:
         self.metrics.token_times.append(time)
+
+    def add_prefill_scheduled_time(self, time: float) -> None:
+        self.metrics.prefill_scheduled_times.append(time)
 
     def get_max_num_running_seqs(self) -> int:
         """The maximum number of sequences running in parallel in the remaining
