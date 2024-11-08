@@ -688,7 +688,8 @@ class SequenceGroup:
                                       time_in_queue=None,
                                       preempty_in_times=[],
                                       preempty_out_times=[],
-                                      token_times=[])
+                                      token_times=[],
+                                      prefill_scheduled_times=[])
         self.lora_request = lora_request
         self.prompt_logprobs: Optional[PromptLogprobs] = None
         self.state = SequenceGroupState()
