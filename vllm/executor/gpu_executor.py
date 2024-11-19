@@ -9,6 +9,7 @@ from vllm.sequence import ExecuteModelRequest, PoolerOutput
 from vllm.utils import (get_distributed_init_method, get_ip, get_open_port,
                         make_async)
 from vllm.worker.worker_base import WorkerBase, WorkerWrapperBase
+import psutil
 
 logger = init_logger(__name__)
 
@@ -102,6 +103,12 @@ class GPUExecutor(ExecutorBase):
                        local_rank: int = 0,
                        rank: int = 0,
                        distributed_init_method: Optional[str] = None):
+        # Set CPU affinity for GH200 specifically. Not portable!!
+        current_process = psutil.Process()
+        affinity_range = list(range(0 + 72 * rank, 72 + 72 * rank))
+        current_process.cpu_affinity(affinity_range)
+        logger.info(f"Set cpu range to {affinity_range} for current worker")
+        
         return create_worker(**self._get_create_worker_kwargs(
             local_rank=local_rank,
             rank=rank,

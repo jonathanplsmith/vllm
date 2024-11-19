@@ -14,6 +14,7 @@ from typing import (Any, Callable, Dict, Generic, List, Optional, TextIO,
 
 import vllm.envs as envs
 from vllm.logger import init_logger
+import psutil
 
 logger = init_logger(__name__)
 
@@ -204,7 +205,6 @@ def _run_worker_process(
     rank: int,
 ) -> None:
     """Worker process event loop"""
-    import psutil
 
     # Add process-specific prefix to stdout and stderr
     process_name = mp.current_process().name
