@@ -145,7 +145,7 @@ class ProcessWorkerWrapper:
     """Local process wrapper for vllm.worker.Worker,
     for handling single-node multi-GPU tensor parallel."""
 
-    def __init__(self, result_handler: ResultHandler,
+    def __init__(self, rank, result_handler: ResultHandler,
                  worker_factory: Callable[[], Any]) -> None:
         self._task_queue = mp.Queue()
         self.result_queue = result_handler.result_queue
@@ -157,6 +157,7 @@ class ProcessWorkerWrapper:
                 worker_factory=worker_factory,
                 task_queue=self._task_queue,
                 result_queue=self.result_queue,
+                rank=rank,
             ),
             daemon=True)
 
@@ -200,8 +201,10 @@ def _run_worker_process(
     worker_factory: Callable[[], Any],
     task_queue: Queue,
     result_queue: Queue,
+    rank: int,
 ) -> None:
     """Worker process event loop"""
+    import psutil
 
     # Add process-specific prefix to stdout and stderr
     process_name = mp.current_process().name
@@ -212,6 +215,12 @@ def _run_worker_process(
     # Initialize worker
     worker = worker_factory()
     del worker_factory
+
+    # Set CPU affinity for GH200 specifically. Not portable!!
+    current_process = psutil.Process()
+    affinity_range = list(range(0 + 72 * rank, 72 + 72 * rank))
+    current_process.cpu_affinity(affinity_range)
+    logger.info(f"Set cpu range to {affinity_range} for current worker")
 
     # Accept tasks from the engine in task_queue
     # and return task output in result_queue
